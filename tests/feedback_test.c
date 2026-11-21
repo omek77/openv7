@@ -143,6 +143,24 @@ int main(void) {
     int s44 = 0; for (int k = 0; k < 8; k++) s44 += g.ring[(24 + k) & (V7FB_RING - 1)];
     CHECK(s44 == 44, "a count of 44 is spread to exactly 44 frames over 8 microframes");
 
+    printf("lost IN transfers preserve the feedback timeline\n");
+    v7fb lost; v7fb_init(&lost);
+    uint8_t good[3] = { 44, 0, 0 };
+    for (int i = 0; i < 16; i++)
+        v7fb_packet(&lost, good, 3, 1);
+    for (int loss = 0; loss < 3; loss++) {
+        v7fb_lost(&lost, 16);
+        for (int i = 0; i < 16; i++)
+            v7fb_packet(&lost, good, 3, 1);
+    }
+    CHECK(lost.wr == 7 * 128,
+          "three lost transfers preserve 896 microframes (%llu)",
+          (unsigned long long)lost.wr);
+    CHECK(lost.bad == 48 && lost.valid == 64,
+          "48 missing milliseconds invalid, 64 valid");
+    CHECK(lost.ring[128] == 0 && lost.ring[256] != 0,
+          "missing feedback is not reused; later feedback is valid");
+
     printf(fails ? "\n%d FAILED\n" : "\nall feedback tests passed\n", fails);
     return fails ? 1 : 0;
 }

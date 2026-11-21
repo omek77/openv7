@@ -79,6 +79,13 @@ static inline void v7fb_packet(v7fb *f, const uint8_t *p, int len, int ok) {
     else f->bad++;
 }
 
+/* Preserve the feedback timeline when an entire IN transfer fails.
+   Missing milliseconds remain explicitly invalid in the ring. */
+static inline void v7fb_lost(v7fb *f, unsigned packets) {
+    for (unsigned i = 0; i < packets; i++)
+        v7fb_packet(f, NULL, 0, 0);
+}
+
 /* Frames for the next OUT packet (one microframe). use_fb = 0 gives the old
    fixed 44,100/s pattern, for A/B testing. */
 static inline int v7fb_next(v7fb *f, int use_fb) {

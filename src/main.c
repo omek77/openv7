@@ -842,6 +842,8 @@ static void LIBUSB_CALL isoin_cb(struct libusb_transfer *t) {
             v7fb_packet(&g_fb, libusb_get_iso_packet_buffer_simple(t, (unsigned)i),
                         (int)t->iso_packet_desc[i].actual_length,
                         t->iso_packet_desc[i].status == LIBUSB_TRANSFER_COMPLETED);
+    else
+        v7fb_lost(&g_fb, (unsigned)t->num_iso_packets);
     /* --diag: show the raw feedback once, ~1 s in, so a deck that speaks a
        different format is diagnosable from one log line. */
     if (g_diag && g_isoin_cmpl == 62 && t->status == LIBUSB_TRANSFER_COMPLETED) {
